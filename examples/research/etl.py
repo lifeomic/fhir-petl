@@ -55,7 +55,7 @@ observations = (etl.io.csv.fromcsv(resolve('work/observations.csv'))
                 .fieldmap({
                     'id': 'ID',
                     'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_VIS_INDEX'])),
-                    'code': lambda rec: (None, rec['NAME']),
+                    'code': lambda rec: (None, rec['NAME'], rec['NAME']),
                     'value': lambda rec: number(rec['RESULT_VALUE']) if rec['RESULT_VALUE'] else (rec['CODED_NAME'] or None),
                     'subject': 'subject'
                 }, True)
