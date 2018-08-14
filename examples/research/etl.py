@@ -1,6 +1,7 @@
 from datetime import timedelta
 import petl as etl
-from fhir import to_json, resolve, mkdirp, number, join, year
+from fhir_petl.fhir import to_json
+from fhir_petl.util import resolve, mkdirp, number, join, year
 
 def map_race(race):
     return {
@@ -15,7 +16,8 @@ def map_race(race):
 patients = (etl.io.csv.fromcsv(resolve('work/patients.csv'))
             .fieldmap({
                 'id': 'ID',
-                'subject_id': 'STUDYID',
+                'STUDYID': 'STUDYID',
+                'subject_id': ('STUDYID', lambda x: 'CASE-' + x),
                 'race': ('RACE', map_race),
                 'gender': ('SEX', {'F': 'female', 'M': 'male'}),
                 'birth_date': ('BIRTH_YR', year),
@@ -24,11 +26,11 @@ patients = (etl.io.csv.fromcsv(resolve('work/patients.csv'))
             .head(100))
 
 index = (patients
-         .cut('subject_id', 'id', 'index_date')
+         .cut('STUDYID', 'id', 'index_date')
          .rename('id', 'subject'))
 
 procedures = (etl.io.csv.fromcsv(resolve('work/procedures.csv'))
-              .hashjoin(index, lkey='STUDYID', rkey='subject_id')
+              .hashjoin(index, lkey='STUDYID', rkey='STUDYID')
               .fieldmap({
                   'id': 'ID',
                   'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_VIS_INDEX'])),
@@ -38,7 +40,7 @@ procedures = (etl.io.csv.fromcsv(resolve('work/procedures.csv'))
               .head(1000))
 
 encounters = (etl.io.csv.fromcsv(resolve('work/encounters.csv'))
-              .hashjoin(index, lkey='STUDYID', rkey='subject_id'))
+              .hashjoin(index, lkey='STUDYID', rkey='STUDYID'))
 
 conditions = (encounters
               .select('DX_CODE', lambda x: x)
@@ -51,7 +53,7 @@ conditions = (encounters
               .head(1000))
 
 observations = (etl.io.csv.fromcsv(resolve('work/observations.csv'))
-                .hashjoin(index, lkey='STUDYID', rkey='subject_id')
+                .hashjoin(index, lkey='STUDYID', rkey='STUDYID')
                 .fieldmap({
                     'id': 'ID',
                     'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_VIS_INDEX'])),
@@ -69,7 +71,7 @@ def medications(rec):
     ]
 
 med_dispenses = (etl.io.csv.fromcsv(resolve('work/med_dispenses.csv'))
-                 .hashjoin(index, lkey='CASE_ID', rkey='subject_id')
+                 .hashjoin(index, lkey='CASE_ID', rkey='STUDYID')
                  .fieldmap({
                      'id': 'ID',
                      'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_VIS_INDEX'])),
@@ -88,7 +90,7 @@ def medications2(rec):
     ]
 
 med_requests = (etl.io.csv.fromcsv(resolve('work/med_requests.csv'))
-                .hashjoin(index, lkey='STUDYID', rkey='subject_id')
+                .hashjoin(index, lkey='STUDYID', rkey='STUDYID')
                 .fieldmap({
                     'id': 'ID',
                     'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_ORDER_INDEX'])),

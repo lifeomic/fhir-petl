@@ -1,36 +1,5 @@
 import json
 import petl as etl
-from uuid import uuid4
-import os
-import sys
-
-def join(*args):
-    result = ''
-    for arg in args:
-        if arg:
-            result += ' %s'%arg
-    return result.strip()
-
-number = etl.numparser()
-year = etl.dateparser('%Y')
-
-def mkdirp(path):
-    path = resolve(path)
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-def resolve(path):
-    root = sys.argv[1] if len(sys.argv) > 1 else '.'
-    return '{0}/{1}'.format(root, path)
-
-def preprocess(table, source, sort=None, ids=['ID'], convert=int):
-    for id in ids:
-        table = table.addfield(id, lambda rec: uuid4())
-    if sort:
-        if convert:
-            table = table.convert(sort, convert)
-        table = table.sort(sort, buffersize=1000000)
-    table.tocsv(source)
 
 def to_json(table, resourceType, source):
     mapper = types[resourceType]
@@ -157,7 +126,7 @@ def to_med_request(rec):
     result['id'] = rec['id']
     result['resourceType'] = 'MedicationRequest'
     if rec['date']:
-        result['date'] = rec['date'].isoformat()
+        result['authoredOn'] = rec['date'].isoformat()
     if rec['medication']:
         result['medicationCodeableConcept'] = to_codeable_concept(rec['medication'])
     if rec['subject']:
