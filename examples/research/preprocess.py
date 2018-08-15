@@ -1,6 +1,5 @@
 import petl as etl
-from fhir import preprocess, resolve, mkdirp
-
+from fhir_petl.util import preprocess, resolve, mkdirp
 
 mkdirp(resolve('work'))
 

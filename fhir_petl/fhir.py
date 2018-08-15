@@ -59,6 +59,8 @@ def to_patient(rec):
         result['gender'] = rec['gender']
     if rec['birth_date']:
         result['birthDate'] = rec['birth_date'].isoformat()
+    if rec['death_date']:
+        result['deceasedDateTime'] = rec['death_date'].isoformat()
     return json.dumps(result)
 
 def to_procedure(rec):

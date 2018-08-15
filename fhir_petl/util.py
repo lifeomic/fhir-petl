@@ -2,6 +2,47 @@ import petl as etl
 import os
 import sys
 from uuid import uuid4
+from datetime import datetime
+from enum import Enum
+
+def dateparser(input_format, iso_format=None):
+    def parse(text):
+        if text:
+            dt = datetime.strptime(text, input_format)
+            return FormattedDateTime(dt, iso_format)
+        else:
+            return None
+
+    return parse
+
+class FormattedDateTime:
+    def __init__(self, dt, iso_format):
+        if type(iso_format) is not ISOFormat:
+            raise TypeError('argument 2 must be an ISOFormat')
+
+        self.dt = dt
+        self.format = iso_format
+
+    def __str__(self):
+        return self.isoformat()
+
+    def __add__(self, other):
+        return FormattedDateTime(self.dt + other, self.format)
+
+    def __sub__(self, other):
+        return FormattedDateTime(self.dt - other, self.format)
+
+    def isoformat(self):
+        return self.dt.strftime(self.format.value)
+
+class ISOFormat(Enum):
+    YEAR = '%Y'
+    MONTH = '%Y-%m'
+    DAY = '%Y-%m-%d'
+    MINUTE = '%Y-%m-%dT%H:%M'
+    SECOND = '%Y-%m-%dT%H:%M:%S'
+
+year = dateparser('%Y', ISOFormat.YEAR)
 
 def join(*args):
     result = ''
@@ -11,10 +52,8 @@ def join(*args):
     return result.strip()
 
 number = etl.numparser()
-year = etl.dateparser('%Y')
 
 def mkdirp(path):
-    path = resolve(path)
     if not os.path.exists(path):
         os.makedirs(path)
 
