@@ -36,11 +36,14 @@ def tuple_to_code(x):
     elif system:
         return {'system': system}
 
+def has(rec, field):
+    return field in rec.flds and rec[field]
+
 def to_patient(rec):
     result = {}
     result['id'] = rec['id']
     result['resourceType'] = 'Patient'
-    if rec['subject_id']:
+    if has(rec, 'subject_id'):
         result['identifier'] = [
             {
                 'type': to_codeable_concept(('http://hl7.org/fhir/v2/0203', 'ANON')),
@@ -48,18 +51,18 @@ def to_patient(rec):
                 'value': rec['subject_id']
             }
         ]
-    if rec['race']:
+    if has(rec, 'race'):
         result['extension'] = [
             {
                 'url': 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race',
                 'valueCodeableConcept': to_codeable_concept(rec['race'])
             }
         ]
-    if rec['gender']:
+    if has(rec, 'gender'):
         result['gender'] = rec['gender']
-    if rec['birth_date']:
+    if has(rec, 'birth_date'):
         result['birthDate'] = rec['birth_date'].isoformat()
-    if rec['death_date']:
+    if has(rec, 'death_date'):
         result['deceasedDateTime'] = rec['death_date'].isoformat()
     return json.dumps(result)
 
@@ -67,74 +70,84 @@ def to_procedure(rec):
     result = {}
     result['id'] = rec['id']
     result['resourceType'] = 'Procedure'
-    if rec['date']:
+    if has(rec, 'date'):
         result['performedDateTime'] = rec['date'].isoformat()
-    if rec['code']:
+    if has(rec, 'code'):
         result['code'] = to_codeable_concept(rec['code'])
-    if rec['subject']:
+    if has(rec, 'subject'):
         result['subject'] = {'reference': 'Patient/' + rec['subject']}
+    if has(rec, 'note'):
+        result['note'] = [{'text': rec['note']}]
     return json.dumps(result)
 
 def to_condition(rec):
     result = {}
     result['id'] = rec['id']
     result['resourceType'] = 'Condition'
-    if rec['onset']:
+    if has(rec, 'onset'):
         result['onsetDateTime'] = rec['onset'].isoformat()
-    if rec['code']:
+    if has(rec, 'asserted'):
+        result['assertedDate'] = rec['asserted'].isoformat()
+    if has(rec, 'code'):
         result['code'] = to_codeable_concept(rec['code'])
-    if rec['subject']:
+    if has(rec, 'subject'):
         result['subject'] = {'reference': 'Patient/' + rec['subject']}
+    if has(rec, 'note'):
+        result['note'] = [{'text': rec['note']}]
     return json.dumps(result)
 
 def to_observation(rec):
     result = {}
     result['id'] = rec['id']
     result['resourceType'] = 'Observation'
-    if rec['date']:
+    if has(rec, 'date'):
         result['effectiveDateTime'] = rec['date'].isoformat()
-    if rec['code']:
+    if has(rec, 'code'):
         result['code'] = to_codeable_concept(rec['code'])
-    if rec['subject']:
+    if has(rec, 'subject'):
         result['subject'] = {'reference': 'Patient/' + rec['subject']}
-    if rec['value']:
+    if has(rec, 'value'):
         value = rec['value']
         if type(value) is int or type(value) is float:
             result['valueQuantity'] = {'value': value}
         else:
             result['valueString'] = value
+    if has(rec, 'note'):
+        result['note'] = [{'text': rec['note']}]
     return json.dumps(result)
 
 def to_med_dispense(rec):
     result = {}
     result['id'] = rec['id']
     result['resourceType'] = 'MedicationDispense'
-    if rec['date']:
+    if has(rec, 'date'):
         result['whenHandedOver'] = rec['date'].isoformat()
-    if rec['medication']:
+    if has(rec, 'medication'):
         result['medicationCodeableConcept'] = to_codeable_concept(rec['medication'])
-    if rec['subject']:
+    if has(rec, 'subject'):
         result['subject'] = {'reference': 'Patient/' + rec['subject']}
-    if rec['quantity']:
+    if has(rec, 'quantity'):
         result['quantity'] = {'value': rec['quantity']}
-    if rec['daysSupply']:
+    if has(rec, 'daysSupply'):
         result['daysSupply'] = {'value': rec['quantity'], 'unit': 'days'}
-    if rec['text']:
-        result['text'] = {'div': rec['text']}
+    if has(rec, 'note'):
+        result['note'] = [{'text': rec['note']}]
     return json.dumps(result)
 
 def to_med_request(rec):
     result = {}
     result['id'] = rec['id']
     result['resourceType'] = 'MedicationRequest'
-    if rec['date']:
+    if has(rec, 'date'):
         result['authoredOn'] = rec['date'].isoformat()
-    if rec['medication']:
+    if has(rec, 'medication'):
         result['medicationCodeableConcept'] = to_codeable_concept(rec['medication'])
-    if rec['subject']:
+    if has(rec, 'subject'):
         result['subject'] = {'reference': 'Patient/' + rec['subject']}
-    if rec['text']:
-        result['text'] = {'div': rec['text']}
+    if has(rec, 'note'):
+        result['note'] = [{'text': rec['note']}]
+    if has(rec, 'status'):
+        result['status'] = rec['status']
     return json.dumps(result)
 
 types = {

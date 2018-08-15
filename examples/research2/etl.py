@@ -51,9 +51,9 @@ procedures = (etl.io.csv.fromcsv(resolve('work/Procedure.csv'))
                   'id': 'ID',
                   'date': lambda rec: date(rec['PROC_DATE'] or rec['ARRIVE_DATE'] or rec['DISCHARGE_DATE']),
                   'code': proc_code,
-                  'subject': 'subject'
-              }, True)
-              .head(1000))
+                  'subject': 'subject',
+                  'note': 'ENC_TYPE'
+              }, True))
 
 def cv_code(rec):
     codes = []
@@ -78,10 +78,36 @@ observations = (etl.io.csv.fromcsv(resolve('work/Observation.csv'))
                     'value': cv_value,
                     'subject': 'subject'
                 }, True)
-                .select('value', lambda x: x)
-                .head(1000))
+                .selecttrue('value'))
+
+def dx_code(rec):
+    if rec['DX_SYS_ID'] == '9':
+        return ('http://hl7.org/fhir/sid/icd-9-cm', rec['DX_CODE'], rec['DX_NAME'])
+    else:
+        return ('http://hl7.org/fhir/sid/icd-10', rec['DX_CODE'], rec['DX_NAME'])
+
+conditions = (etl.io.csv.fromcsv(resolve('work/Condition.csv'))
+              .hashjoin(index, lkey='SID', rkey='SID')
+              .fieldmap({
+                  'id': 'ID',
+                  'onset': ('DATE_OF_DX', date),
+                  'code': dx_code,
+                  'subject': 'subject'
+              }, True))
+
+med_requests = (etl.io.csv.fromcsv(resolve('work/MedicationRequest.csv'))
+                .hashjoin(index, lkey='SID', rkey='SID')
+                .fieldmap({
+                    'id': 'ID',
+                    'date': ('ORDER_DATE', date),
+                    'medication': lambda rec: ('http://hl7.org/fhir/sid/ndc', rec['NDC'], rec['DRUG_NAME']),
+                    'subject': 'subject',
+                    'status': ('FILL_COMPLETE', lambda complete: 'complete' if complete == '1' else None)
+                }, True))
 
 mkdirp(resolve('fhir'))
 to_json(patients, 'Patient', resolve('fhir/Patient.json'))
 to_json(procedures, 'Procedure', resolve('fhir/Procedure.json'))
 to_json(observations, 'Observation', resolve('fhir/Observation.json'))
+to_json(conditions, 'Condition', resolve('fhir/Condition.json'))
+to_json(med_requests, 'MedicationRequest', resolve('fhir/MedicationRequest.json'))

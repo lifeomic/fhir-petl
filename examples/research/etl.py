@@ -1,7 +1,7 @@
 from datetime import timedelta
 import petl as etl
 from fhir_petl.fhir import to_json
-from fhir_petl.util import resolve, mkdirp, number, join, year
+from fhir_petl.util import resolve, mkdirp, number, join, year, dateparser, ISOFormat
 
 def map_race(race):
     return {
@@ -21,7 +21,7 @@ patients = (etl.io.csv.fromcsv(resolve('work/patients.csv'))
                 'race': ('RACE', map_race),
                 'gender': ('SEX', {'F': 'female', 'M': 'male'}),
                 'birth_date': ('BIRTH_YR', year),
-                'index_date': ('INDEX_YEAR', year)
+                'index_date': ('INDEX_YEAR', dateparser('%Y', ISOFormat.DAY))
             }, True)
             .head(100))
 
@@ -48,6 +48,7 @@ conditions = (encounters
                   'id': 'CONDITION_ID',
                   'onset': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_ADM_INDEX'])),
                   'code': lambda rec: ('http://hl7.org/fhir/sid/icd-9-cm', rec['DX_CODE']),
+                  'note': lambda rec: join(rec['CARE_SETTING_TEXT'], rec['LOCATION_POINT_OF_CARE']),
                   'subject': 'subject'
               }, True)
               .head(1000))
@@ -78,7 +79,7 @@ med_dispenses = (etl.io.csv.fromcsv(resolve('work/med_dispenses.csv'))
                      'medication': medications,
                      'quantity': ('DISPENSE_AMOUNT', number),
                      'daysSupply': ('NUMBER_OF_DAYS_SUPPLY', number),
-                     'text': lambda rec: join(rec['DOSAGE_FORM_TEXT'], rec['DRUG_GROUP'], rec['DRUG_CLASS']),
+                     'note': lambda rec: join(rec['DOSAGE_FORM_TEXT'], rec['DRUG_GROUP'], rec['DRUG_CLASS']),
                      'subject': 'subject'
                  }, True)
                  .head(1000))
@@ -95,7 +96,7 @@ med_requests = (etl.io.csv.fromcsv(resolve('work/med_requests.csv'))
                     'id': 'ID',
                     'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_ORDER_INDEX'])),
                     'medication': medications2,
-                    'text': lambda rec: join(rec['DRUG_GROUP'], rec['DRUG_CLASS']),
+                    'note': lambda rec: join(rec['DRUG_GROUP'], rec['DRUG_CLASS']),
                     'subject': 'subject'
                 }, True)
                 .head(1000))
