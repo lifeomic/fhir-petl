@@ -7,12 +7,11 @@ date = dateparser('%Y-%m-%d %H:%M:%S', ISOFormat.DAY)
 
 def map_race(race):
     return {
-        'AMERICAN INDIAN AND ALASKA NATIVE': ('http://hl7.org/fhir/v3/Race', '1002-5', 'American Indian or Alaska Native'),
         'ASIAN': ('http://hl7.org/fhir/v3/Race', '2028-9', 'Asian'),
-        'BLACK OR AFRICAN AMERICAN': ('http://hl7.org/fhir/v3/Race', '2054-5', 'Black or African American'),
-        'HISPANIC OR LATINO': ('http://hl7.org/fhir/v3/Race', '2106-3', 'White'),
+        'BLACK': ('http://hl7.org/fhir/v3/Race', '2054-5', 'Black or African American'),
+        'HISPANIC/LATINO': ('http://hl7.org/fhir/v3/Race', '2106-3', 'White'),
         'WHITE': ('http://hl7.org/fhir/v3/Race', '2106-3', 'White'),
-        'MULTIRACIAL': None
+        'NATIVE HAWAIIAN/PACIFIC ISLANDER': ('http://hl7.org/fhir/v3/Race', '2076-8', 'Native Hawaiian or Other Pacific Islander')
     }.get(race, None)
 
 def sample_date(text):
@@ -32,7 +31,8 @@ patients = (etl.io.csv.fromcsv(resolve('work/Patient.csv'))
                 'gender': ('GENDER', {'F': 'female', 'M': 'male'}),
                 'birth_date': birth_date,
                 'death_date': ('DEATH_YR', year),
-                'sample_date': ('SAMPLE_DATE', sample_date)
+                'sample_date': ('SAMPLE_DATE', sample_date),
+                'tag': ('Cohort', lambda cohort: ('cohort', cohort.upper()))
             }, True))
 
 index = (patients
@@ -59,7 +59,7 @@ def cv_code(rec):
     codes = []
     if rec['LOINC_CODE']:
         codes.append(('http://loinc.org', rec['LOINC_CODE'], rec['CV_NAME']))
-    if rec['CV_CODE']:
+    elif rec['CV_CODE']:
         codes.append((None, rec['CV_CODE'], rec['CV_NAME']))
     return codes
 
@@ -102,7 +102,7 @@ med_requests = (etl.io.csv.fromcsv(resolve('work/MedicationRequest.csv'))
                     'date': ('ORDER_DATE', date),
                     'medication': lambda rec: ('http://hl7.org/fhir/sid/ndc', rec['NDC'], rec['DRUG_NAME']),
                     'subject': 'subject',
-                    'status': ('FILL_COMPLETE', lambda complete: 'complete' if complete == '1' else None)
+                    'status': ('FILL_COMPLETE', lambda complete: 'completed' if complete == '1' else None)
                 }, True))
 
 mkdirp(resolve('fhir'))

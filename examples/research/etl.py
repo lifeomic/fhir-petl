@@ -21,7 +21,8 @@ patients = (etl.io.csv.fromcsv(resolve('work/patients.csv'))
                 'race': ('RACE', map_race),
                 'gender': ('SEX', {'F': 'female', 'M': 'male'}),
                 'birth_date': ('BIRTH_YR', year),
-                'index_date': ('INDEX_YEAR', dateparser('%Y', ISOFormat.DAY))
+                'index_date': ('INDEX_YEAR', dateparser('%Y', ISOFormat.DAY)),
+                'tag': lambda rec: ('subject-type', 'case')
             }, True)
             .head(100))
 
@@ -66,9 +67,13 @@ observations = (etl.io.csv.fromcsv(resolve('work/observations.csv'))
                 .head(1000))
 
 def medications(rec):
+    group = rec['DRUG_GROUP'].strip('*')
+    clazz = rec['DRUG_CLASS'].strip('*')
     return [
         ('http://hl7.org/fhir/sid/ndc', rec['NDC_CODE'], rec['DRUG_NAME']),
-        ('urn:oid:2.16.840.1.113883.6.68', rec['GPI_CODE'], rec['DRUG_NAME'])
+        ('urn:oid:2.16.840.1.113883.6.68', rec['GPI_CODE']),
+        ('drug-class', clazz, clazz),
+        ('drug-group', group, group)
     ]
 
 med_dispenses = (etl.io.csv.fromcsv(resolve('work/med_dispenses.csv'))
@@ -79,15 +84,18 @@ med_dispenses = (etl.io.csv.fromcsv(resolve('work/med_dispenses.csv'))
                      'medication': medications,
                      'quantity': ('DISPENSE_AMOUNT', number),
                      'daysSupply': ('NUMBER_OF_DAYS_SUPPLY', number),
-                     'note': lambda rec: join(rec['DOSAGE_FORM_TEXT'], rec['DRUG_GROUP'], rec['DRUG_CLASS']),
                      'subject': 'subject'
                  }, True)
                  .head(1000))
 
 def medications2(rec):
+    group = rec['DRUG_GROUP'].strip('*')
+    clazz = rec['DRUG_CLASS'].strip('*')
     return [
         ('http://hl7.org/fhir/sid/ndc', rec['NDC'], rec['ORDER_NAME']),
-        ('urn:oid:2.16.840.1.113883.6.68', rec['GPI'], rec['ORDER_NAME'])
+        ('urn:oid:2.16.840.1.113883.6.68', rec['GPI']),
+        ('drug-class', clazz, clazz),
+        ('drug-group', group, group)
     ]
 
 med_requests = (etl.io.csv.fromcsv(resolve('work/med_requests.csv'))
@@ -96,7 +104,6 @@ med_requests = (etl.io.csv.fromcsv(resolve('work/med_requests.csv'))
                     'id': 'ID',
                     'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_ORDER_INDEX'])),
                     'medication': medications2,
-                    'note': lambda rec: join(rec['DRUG_GROUP'], rec['DRUG_CLASS']),
                     'subject': 'subject'
                 }, True)
                 .head(1000))

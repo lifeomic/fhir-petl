@@ -64,6 +64,8 @@ def to_patient(rec):
         result['birthDate'] = rec['birth_date'].isoformat()
     if has(rec, 'death_date'):
         result['deceasedDateTime'] = rec['death_date'].isoformat()
+    if has(rec, 'tag'):
+        result['meta'] = {'tag': [tuple_to_code(rec['tag'])]}
     return json.dumps(result)
 
 def to_procedure(rec):

@@ -7,4 +7,4 @@ procedures = (etl.io.csv.fromcsv(resolve('work/Procedure.csv')))
 conditions = (etl.io.csv.fromcsv(resolve('work/Condition.csv')))
 med_requests = (etl.io.csv.fromcsv(resolve('work/MedicationRequest.csv')))
 
-print(med_requests)
+print(patients.aggregate('RACE', len).look(100))
