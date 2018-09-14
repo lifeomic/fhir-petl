@@ -60,7 +60,7 @@ def cv_code(rec):
     if rec['LOINC_CODE']:
         codes.append(('http://loinc.org', rec['LOINC_CODE'], rec['CV_NAME']))
     elif rec['CV_CODE']:
-        codes.append((None, rec['CV_CODE'], rec['CV_NAME']))
+        codes.append(('http://regenstrief.org/cv_code', rec['CV_CODE'], rec['CV_NAME']))
     return codes
 
 def cv_value(rec):
