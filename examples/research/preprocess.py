@@ -5,31 +5,31 @@ mkdirp(resolve('work'))
 
 preprocess(
     etl.io.csv.fromcsv(resolve('case_demog_27065.csv')),
-    resolve('work/patients.csv'),
-    'STUDYID')
+    'STUDYID'
+).tocsv(resolve('work/patients.csv'))
 
 preprocess(
     etl.io.csv.fromtsv(resolve('dx_case_inst.txt')),
-    resolve('work/encounters.csv'),
     ('STUDYID', 'INST_FAKE', 'DAYS_ADM_INDEX', 'DAYS_DISCH_INDEX'),
-    ('ID', 'CONDITION_ID'))
+    ('ID', 'CONDITION_ID')
+).tocsv(resolve('work/encounters.csv'))
 
 preprocess(
     etl.io.csv.fromtsv(resolve('lab_case_inst.txt')),
-    resolve('work/observations.csv'),
-    'STUDYID')
+    'STUDYID'
+).tocsv(resolve('work/observations.csv'))
 
 preprocess(
     etl.io.csv.fromtsv(resolve('med_case_inst_gpi.txt')),
-    resolve('work/med_dispenses.csv'),
-    'CASE_ID')
+    'CASE_ID'
+).tocsv(resolve('work/med_dispenses.csv'))
 
 preprocess(
     etl.io.csv.fromtsv(resolve('order_case_inst_gpi.txt')),
-    resolve('work/med_requests.csv'),
-    'STUDYID')
+    'STUDYID'
+).tocsv(resolve('work/med_requests.csv'))
 
 preprocess(
     etl.io.csv.fromtsv(resolve('proc_case_inst.txt')),
-    resolve('work/procedures.csv'),
-    'STUDYID')
+    'STUDYID'
+).tocsv(resolve('work/procedures.csv'))

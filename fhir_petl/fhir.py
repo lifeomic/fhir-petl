@@ -8,7 +8,7 @@ def to_json(table, resourceType, source):
     return table
 
 def to_codeable_concept(x):
-    if type(x) is list:
+    if isinstance(x, list):
         result = map(tuple_to_code, x)
     else:
         result = [tuple_to_code(x)]
@@ -23,18 +23,20 @@ def tuple_to_code(x):
 
     if system and code and display:
         return {'system': system, 'code': code, 'display': display}
-    elif code and display:
+    if code and display:
         return {'code': code, 'display': display}
-    elif system and code:
+    if system and code:
         return {'system': system, 'code': code}
-    elif system and display:
+    if system and display:
         return {'system': system, 'display': display}
-    elif code:
+    if code:
         return {'code': code}
-    elif display:
+    if display:
         return {'display': display}
-    elif system:
+    if system:
         return {'system': system}
+
+    return None
 
 def has(rec, field):
     return field in rec.flds and rec[field]
@@ -110,7 +112,7 @@ def to_observation(rec):
         result['subject'] = {'reference': 'Patient/' + rec['subject']}
     if has(rec, 'value'):
         value = rec['value']
-        if type(value) is int or type(value) is float:
+        if isinstance(value, (int, float)):
             result['valueQuantity'] = {'value': value}
         else:
             result['valueString'] = value

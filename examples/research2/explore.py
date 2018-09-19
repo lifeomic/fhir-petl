@@ -1,5 +1,5 @@
 import petl as etl
-from fhir_petl.util import resolve, mkdirp, number, year, dateparser
+from fhir_petl.util import resolve
 
 observations = (etl.io.csv.fromcsv(resolve('work/Observation.csv')))
 patients = (etl.io.csv.fromcsv(resolve('work/Patient.csv')))

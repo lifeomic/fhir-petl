@@ -23,8 +23,7 @@ patients = (etl.io.csv.fromcsv(resolve('work/patients.csv'))
                 'birth_date': ('BIRTH_YR', year),
                 'index_date': ('INDEX_YEAR', dateparser('%Y', ISOFormat.DAY)),
                 'tag': lambda rec: ('subject-type', 'case')
-            }, True)
-            .head(100))
+            }, True))
 
 index = (patients
          .cut('STUDYID', 'id', 'index_date')
@@ -37,8 +36,7 @@ procedures = (etl.io.csv.fromcsv(resolve('work/procedures.csv'))
                   'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_VIS_INDEX'])),
                   'code': lambda rec: ('http://www.ama-assn.org/go/cpt', rec['PROC_CODE'], rec['NAME'].strip('" ')),
                   'subject': 'subject'
-              }, True)
-              .head(1000))
+              }, True))
 
 encounters = (etl.io.csv.fromcsv(resolve('work/encounters.csv'))
               .hashjoin(index, lkey='STUDYID', rkey='STUDYID'))
@@ -51,8 +49,7 @@ conditions = (encounters
                   'code': lambda rec: ('http://hl7.org/fhir/sid/icd-9-cm', rec['DX_CODE']),
                   'note': lambda rec: join(rec['CARE_SETTING_TEXT'], rec['LOCATION_POINT_OF_CARE']),
                   'subject': 'subject'
-              }, True)
-              .head(1000))
+              }, True))
 
 observations = (etl.io.csv.fromcsv(resolve('work/observations.csv'))
                 .hashjoin(index, lkey='STUDYID', rkey='STUDYID')
@@ -63,8 +60,7 @@ observations = (etl.io.csv.fromcsv(resolve('work/observations.csv'))
                     'value': lambda rec: number(rec['RESULT_VALUE']) if rec['RESULT_VALUE'] else (rec['CODED_NAME'] or None),
                     'subject': 'subject'
                 }, True)
-                .select('value', lambda x: x)
-                .head(1000))
+                .select('value', lambda x: x))
 
 def medications(rec):
     group = rec['DRUG_GROUP'].strip('*')
@@ -85,8 +81,7 @@ med_dispenses = (etl.io.csv.fromcsv(resolve('work/med_dispenses.csv'))
                      'quantity': ('DISPENSE_AMOUNT', number),
                      'daysSupply': ('NUMBER_OF_DAYS_SUPPLY', number),
                      'subject': 'subject'
-                 }, True)
-                 .head(1000))
+                 }, True))
 
 def medications2(rec):
     group = rec['DRUG_GROUP'].strip('*')
@@ -105,8 +100,7 @@ med_requests = (etl.io.csv.fromcsv(resolve('work/med_requests.csv'))
                     'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_ORDER_INDEX'])),
                     'medication': medications2,
                     'subject': 'subject'
-                }, True)
-                .head(1000))
+                }, True))
 
 
 mkdirp(resolve('fhir'))

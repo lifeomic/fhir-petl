@@ -42,8 +42,8 @@ index = (patients
 def proc_code(rec):
     if rec['PROC_SYS_ID'] == 1:
         return ('http://www.ama-assn.org/go/cpt', rec['PROC_CODE'], rec['PROC_NAME'].strip('" '))
-    else:
-        return ('http://hl7.org/fhir/sid/icd-9-cm', rec['PROC_CODE'], rec['PROC_NAME'].strip('" '))
+
+    return ('http://hl7.org/fhir/sid/icd-9-cm', rec['PROC_CODE'], rec['PROC_NAME'].strip('" '))
 
 procedures = (etl.io.csv.fromcsv(resolve('work/Procedure.csv'))
               .hashjoin(index, lkey='SID', rkey='SID')
@@ -66,8 +66,8 @@ def cv_code(rec):
 def cv_value(rec):
     if rec['CV_RESULT_NUMERIC']:
         return number(rec['CV_RESULT_NUMERIC'])
-    else:
-        return rec['CV_RESULT_CATEGORICAL'] or None
+
+    return rec['CV_RESULT_CATEGORICAL'] or None
 
 observations = (etl.io.csv.fromcsv(resolve('work/Observation.csv'))
                 .hashjoin(index, lkey='SID', rkey='SID')
@@ -83,8 +83,8 @@ observations = (etl.io.csv.fromcsv(resolve('work/Observation.csv'))
 def dx_code(rec):
     if rec['DX_SYS_ID'] == '9':
         return ('http://hl7.org/fhir/sid/icd-9-cm', rec['DX_CODE'], rec['DX_NAME'])
-    else:
-        return ('http://hl7.org/fhir/sid/icd-10', rec['DX_CODE'], rec['DX_NAME'])
+
+    return ('http://hl7.org/fhir/sid/icd-10', rec['DX_CODE'], rec['DX_NAME'])
 
 conditions = (etl.io.csv.fromcsv(resolve('work/Condition.csv'))
               .hashjoin(index, lkey='SID', rkey='SID')
