@@ -10,27 +10,33 @@ def map_race(race):
         'BLACK OR AFRICAN AMERICAN': ('http://hl7.org/fhir/v3/Race', '2054-5', 'Black or African American'),
         'HISPANIC OR LATINO': ('http://hl7.org/fhir/v3/Race', '2106-3', 'White'),
         'WHITE': ('http://hl7.org/fhir/v3/Race', '2106-3', 'White'),
-        'MULTIRACIAL': None
+        'NATIVE HAWAIIAN AND OTHER PACIFIC ISLANDER': ('http://hl7.org/fhir/v3/Race', '2076-8', 'Native Hawaiian or Other Pacific Islander')
     }.get(race, None)
 
-patients = (etl.io.csv.fromcsv(resolve('work/patients.csv'))
+def index_date(rec):
+    birth = number(rec['BIRTH_YR'])
+    index_age = number(rec['INDEX_AGE'])
+    index_date = str(birth + index_age)
+    return dateparser('%Y', ISOFormat.DAY)(index_date)
+
+patients = (etl.io.csv.fromcsv(resolve('work/Patient.csv'))
             .fieldmap({
                 'id': 'ID',
-                'STUDYID': 'STUDYID',
-                'subject_id': ('STUDYID', lambda x: 'CASE-' + x),
+                'CONTROL_ID': 'control_id',
+                'subject_id': ('control_id', lambda x: 'CONTROL-' + x),
                 'race': ('RACE', map_race),
                 'gender': ('SEX', {'F': 'female', 'M': 'male'}),
                 'birth_date': ('BIRTH_YR', year),
-                'index_date': ('INDEX_YEAR', dateparser('%Y', ISOFormat.DAY)),
-                'tag': lambda rec: ('subject-type', 'case')
+                'index_date': index_date,
+                'tag': lambda rec: ('subject-type', 'control')
             }, True))
 
 index = (patients
-         .cut('STUDYID', 'id', 'index_date')
+         .cut('CONTROL_ID', 'id', 'index_date')
          .rename('id', 'subject'))
 
-procedures = (etl.io.csv.fromcsv(resolve('work/procedures.csv'))
-              .hashjoin(index, lkey='STUDYID', rkey='STUDYID')
+procedures = (etl.io.csv.fromcsv(resolve('work/Procedure.csv'))
+              .hashjoin(index, lkey='CONTROL_ID', rkey='CONTROL_ID')
               .fieldmap({
                   'id': 'ID',
                   'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_VIS_INDEX'])),
@@ -38,25 +44,23 @@ procedures = (etl.io.csv.fromcsv(resolve('work/procedures.csv'))
                   'subject': 'subject'
               }, True))
 
-encounters = (etl.io.csv.fromcsv(resolve('work/encounters.csv'))
-              .hashjoin(index, lkey='STUDYID', rkey='STUDYID'))
-
-conditions = (encounters
+conditions = (etl.io.csv.fromcsv(resolve('work/Condition.csv'))
+              .hashjoin(index, lkey='CONTROL_ID', rkey='CONTROL_ID')
               .select('DX_CODE', lambda x: x)
               .fieldmap({
-                  'id': 'CONDITION_ID',
+                  'id': 'ID',
                   'onset': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_ADM_INDEX'])),
                   'code': lambda rec: ('http://hl7.org/fhir/sid/icd-9-cm', rec['DX_CODE']),
                   'note': lambda rec: join(rec['CARE_SETTING_TEXT'], rec['LOCATION_POINT_OF_CARE']),
                   'subject': 'subject'
               }, True))
 
-observations = (etl.io.csv.fromcsv(resolve('work/observations.csv'))
-                .hashjoin(index, lkey='STUDYID', rkey='STUDYID')
+observations = (etl.io.csv.fromcsv(resolve('work/Observation.csv'))
+                .hashjoin(index, lkey='CONTROL_ID', rkey='CONTROL_ID')
                 .fieldmap({
                     'id': 'ID',
                     'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_VIS_INDEX'])),
-                    'code': lambda rec: (None, rec['NAME'], rec['NAME']),
+                    'code': lambda rec: ('lab-text', rec['NAME'], rec['NAME']),
                     'value': lambda rec: number(rec['RESULT_VALUE']) if rec['RESULT_VALUE'] else (rec['CODED_NAME'] or None),
                     'subject': 'subject'
                 }, True)
@@ -67,13 +71,13 @@ def medications(rec):
     clazz = rec['DRUG_CLASS'].strip('*')
     return [
         ('http://hl7.org/fhir/sid/ndc', rec['NDC_CODE'], rec['DRUG_NAME']),
-        ('urn:oid:2.16.840.1.113883.6.68', rec['GPI_CODE']),
+        ('urn:oid:2.16.840.1.113883.6.68', rec['GPI_CODE'], rec['DRUG_NAME']),
         ('drug-class', clazz, clazz),
         ('drug-group', group, group)
     ]
 
-med_dispenses = (etl.io.csv.fromcsv(resolve('work/med_dispenses.csv'))
-                 .hashjoin(index, lkey='CASE_ID', rkey='STUDYID')
+med_dispenses = (etl.io.csv.fromcsv(resolve('work/MedicationDispense.csv'))
+                 .hashjoin(index, lkey='CONTROL_ID', rkey='CONTROL_ID')
                  .fieldmap({
                      'id': 'ID',
                      'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_VIS_INDEX'])),
@@ -88,13 +92,13 @@ def medications2(rec):
     clazz = rec['DRUG_CLASS'].strip('*')
     return [
         ('http://hl7.org/fhir/sid/ndc', rec['NDC'], rec['ORDER_NAME']),
-        ('urn:oid:2.16.840.1.113883.6.68', rec['GPI']),
+        ('urn:oid:2.16.840.1.113883.6.68', rec['GPI'], rec['ORDER_NAME']),
         ('drug-class', clazz, clazz),
         ('drug-group', group, group)
     ]
 
-med_requests = (etl.io.csv.fromcsv(resolve('work/med_requests.csv'))
-                .hashjoin(index, lkey='STUDYID', rkey='STUDYID')
+med_requests = (etl.io.csv.fromcsv(resolve('work/MedicationRequest.csv'))
+                .hashjoin(index, lkey='CONTROL_ID', rkey='CONTROL_ID')
                 .fieldmap({
                     'id': 'ID',
                     'date': lambda rec: rec['index_date'] + timedelta(int(rec['DAYS_ORDER_INDEX'])),
@@ -104,9 +108,9 @@ med_requests = (etl.io.csv.fromcsv(resolve('work/med_requests.csv'))
 
 
 mkdirp(resolve('fhir'))
-to_json(patients, 'Patient', resolve('fhir/patients.json'))
-to_json(procedures, 'Procedure', resolve('fhir/procedures.json'))
-to_json(conditions, 'Condition', resolve('fhir/conditions.json'))
-to_json(observations, 'Observation', resolve('fhir/observations.json'))
-to_json(med_dispenses, 'MedicationDispense', resolve('fhir/med_dispenses.json'))
-to_json(med_requests, 'MedicationRequest', resolve('fhir/med_requests.json'))
+#to_json(patients, 'Patient', resolve('fhir/Patient.json'))
+#to_json(procedures, 'Procedure', resolve('fhir/Procedure.json'))
+to_json(conditions, 'Condition', resolve('fhir/Condition.json'))
+#to_json(observations, 'Observation', resolve('fhir/Observation.json'))
+#to_json(med_dispenses, 'MedicationDispense', resolve('fhir/MedicationDispense.json'))
+#to_json(med_requests, 'MedicationRequest', resolve('fhir/MedicationRequest.json'))
