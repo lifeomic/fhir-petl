@@ -133,7 +133,7 @@ def to_med_dispense(rec):
     if has(rec, 'quantity'):
         result['quantity'] = {'value': rec['quantity']}
     if has(rec, 'daysSupply'):
-        result['daysSupply'] = {'value': rec['quantity'], 'unit': 'days'}
+        result['daysSupply'] = {'value': rec['daysSupply'], 'unit': 'days'}
     if has(rec, 'note'):
         result['note'] = [{'text': rec['note']}]
     return json.dumps(result)
