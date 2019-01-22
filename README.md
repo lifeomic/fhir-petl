@@ -1,3 +1,4 @@
-This repo implements a Docker container for
-transforming tabular data (CSV, TSV, XLS, XLSX)
+![FHIR PETL](logo.png)
+
+A Docker container for transforming tabular data (CSV, TSV, XLS, XLSX)
 to FHIR (JSON).
