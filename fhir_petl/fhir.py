@@ -60,9 +60,18 @@ def to_patient(rec):
                 'valueCodeableConcept': to_codeable_concept(rec['race'])
             }
         ]
+    if has(rec, 'ethnicity'):
+        result['extension'] = [
+        {
+            'url': 'http://hl7.org/fhir/StructureDefinition/us-core-ethnicity',
+            'valueCodeableConcept': to_codeable_concept(rec['ethnicity'])
+        }
+    ]
     if has(rec, 'gender'):
         result['gender'] = rec['gender']
     if has(rec, 'birth_date'):
+        print(type(rec['birth_date']))
+        print(rec['birth_date'])
         result['birthDate'] = rec['birth_date'].isoformat()
     if has(rec, 'death_date'):
         result['deceasedDateTime'] = rec['death_date'].isoformat()
@@ -94,10 +103,18 @@ def to_condition(rec):
         result['assertedDate'] = rec['asserted'].isoformat()
     if has(rec, 'code'):
         result['code'] = to_codeable_concept(rec['code'])
+    if has(rec, 'bodySite'):
+        result['bodySite'] = [
+            to_codeable_concept(rec['bodySite'])
+        ]
+    if has(rec, 'severity'):
+        result['severity'] = to_codeable_concept(rec['severity'])
     if has(rec, 'subject'):
         result['subject'] = {'reference': 'Patient/' + rec['subject']}
     if has(rec, 'note'):
         result['note'] = [{'text': rec['note']}]
+    if has(rec, 'tag'):
+        result['meta'] = {'tag': [tuple_to_code(rec['tag'])]}
     return json.dumps(result)
 
 def to_observation(rec):
@@ -154,11 +171,55 @@ def to_med_request(rec):
         result['status'] = rec['status']
     return json.dumps(result)
 
+
+def to_med_statement(rec):
+    result = {}
+    result['id'] = rec['id']
+    result['resourceType'] = 'MedicationStatement'
+    if has(rec, 'nct'):
+        result['extension'] = [
+            {
+                'url': 'http://hl7.org/fhir/StructureDefinition/patient-clinicalTrial-NCT',
+                'valueString': rec['nct']
+            }
+        ]
+    if has(rec, 'subject'):
+        result['subject'] = {'reference': 'Patient/' + rec['subject']}
+    if has(rec, 'start_date'):
+        result['effectivePeriod'] = {}
+        result['effectivePeriod'].update({'start' : rec['start_date'].isoformat()})
+    if has(rec, 'end_date'):
+        result['effectivePeriod'].update({'end' : rec['end_date'].isoformat()})
+    if has(rec, 'medication'):
+        result['medicationCodeableConcept'] = to_codeable_concept(rec['medication'])
+    if has(rec, 'status'):
+        result['status'] = rec['status']
+    if has(rec, 'note'):
+        result['note'] = [
+            {
+                'text': rec['note']
+            }
+        ]
+    if has(rec, 'indication'):
+        result['reasonCode'] = [
+            to_codeable_concept(rec['indication'])
+        ]
+    if has(rec, 'route'):
+        result['dosage'] = [
+            {
+                'route': to_codeable_concept(rec['route'])
+            }
+        ]
+
+
+    return json.dumps(result)
+
 types = {
     'Procedure': to_procedure,
     'Patient': to_patient,
     'Condition': to_condition,
     'Observation': to_observation,
     'MedicationDispense': to_med_dispense,
-    'MedicationRequest': to_med_request
+    'MedicationRequest': to_med_request,
+    'MedicationStatement': to_med_statement
 }
