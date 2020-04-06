@@ -70,8 +70,6 @@ def to_patient(rec):
     if has(rec, 'gender'):
         result['gender'] = rec['gender']
     if has(rec, 'birth_date'):
-        print(type(rec['birth_date']))
-        print(rec['birth_date'])
         result['birthDate'] = rec['birth_date'].isoformat()
     if has(rec, 'death_date'):
         result['deceasedDateTime'] = rec['death_date'].isoformat()

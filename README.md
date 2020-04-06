@@ -1,9 +1,6 @@
-# FHIR PETL
+This is moved: <https://github.com/lifeomic/fhir-petl/>
 
-![FHIR PETL](logo.png)
 
-A utility for transforming tabular data (CSV, TSV, XLS, XLSX)
-to FHIR (JSON) using PETL.
-
-TODO: 
-* package as a docker container
+This repo implements a Docker container for
+transforming tabular data (CSV, TSV, XLS, XLSX)
+to FHIR (JSON).
