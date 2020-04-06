@@ -12,7 +12,6 @@ from fhir_petl.util import resolve
 def get_current_row(row_info, join_key_value):
     '''check if key is in the csv'''
     if join_key_value in row_info:
-        # print(row_info[join_key_value])
         return row_info[join_key_value]
     return {}
 
@@ -77,10 +76,8 @@ def transform_row_info(row_info, target_mappings, join_key):
     '''transform the row info into a list of new row values'''
     new_rows = {}
     for row in row_info.values():
-        if row['barcode'] == '1009-BS-05':
-
-            transformed_row = transform_single_row_info(row, target_mappings)
-            new_rows[transformed_row[join_key]] = transformed_row
+        transformed_row = transform_single_row_info(row, target_mappings)
+        new_rows[transformed_row[join_key]] = transformed_row
 
     return list(new_rows.values())
 
@@ -102,7 +99,12 @@ def generate_csv(in_files, file_join_key, mapping_join_key, output_file_name):
 
 
 
-generate_csv(dm.ktb_patient_mapping, 'barcode', 'SID', 'Patients_ktb.csv')
+generate_csv(
+    dm.patient_mapping_1
+    , 'barcode'
+    , 'SID'
+    , 'Patients_ktb.csv'
+)
 
 
 # generate_csv(
