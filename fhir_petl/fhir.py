@@ -62,11 +62,11 @@ def to_patient(rec):
         ]
     if has(rec, 'ethnicity'):
         result['extension'] = [
-        {
-            'url': 'http://hl7.org/fhir/StructureDefinition/us-core-ethnicity',
-            'valueCodeableConcept': to_codeable_concept(rec['ethnicity'])
-        }
-    ]
+            {
+                'url': 'http://hl7.org/fhir/StructureDefinition/us-core-ethnicity',
+                'valueCodeableConcept': to_codeable_concept(rec['ethnicity'])
+            }
+        ]
     if has(rec, 'gender'):
         result['gender'] = rec['gender']
     if has(rec, 'birth_date'):
@@ -208,9 +208,38 @@ def to_med_statement(rec):
                 'route': to_codeable_concept(rec['route'])
             }
         ]
-
-
     return json.dumps(result)
+
+
+def to_med_administration(rec):
+    result = {}
+    result['id'] = rec['id']
+    result['resourceType'] = 'MedicationAdministration'
+    if has(rec, 'status'):
+        result['status'] = rec['status']
+    if has(rec, 'subject'):
+        result['subject'] = {'reference': 'Patient/' + rec['subject']}
+    if has(rec, 'medication'):
+        result['medicationCodeableConcept'] = to_codeable_concept(rec['medication'])
+    if has(rec, 'start_date'):
+        result['effectivePeriod'] = {}
+        result['effectivePeriod'].update({'start' : rec['start_date'].isoformat()})
+    if has(rec, 'end_date'):
+        result['effectivePeriod'].update({'end' : rec['end_date'].isoformat()})
+    if has(rec, 'note'):
+        result['note'] = [
+            {
+                'text' : rec['note']
+            }
+        ]
+    if has(rec, 'route'):
+        result['dosage'] = [
+            {
+                'route': to_codeable_concept(rec['route'])
+            }
+        ]
+    return json.dumps(result)
+
 
 types = {
     'Procedure': to_procedure,
@@ -219,5 +248,6 @@ types = {
     'Observation': to_observation,
     'MedicationDispense': to_med_dispense,
     'MedicationRequest': to_med_request,
-    'MedicationStatement': to_med_statement
+    'MedicationStatement': to_med_statement,
+    'MedicationAdministration': to_med_administration
 }
