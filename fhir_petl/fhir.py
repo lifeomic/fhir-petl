@@ -14,6 +14,43 @@ def to_codeable_concept(x):
         result = [tuple_to_code(x)]
     return {'coding': [c for c in result if c.get('code')]}
 
+def to_ratio(x):
+    numerator, denominator = x
+    ratio = {}
+    if numerator:
+        ratio['numerator'] = to_quantity(numerator)
+    if denominator:
+        ratio['denominator'] = to_quantity(denominator)
+    return ratio
+
+def to_quantity(x):
+    value, comparator, unit, system, code = x
+    quantity = {}
+    if value:
+        quantity['value'] = value
+    if comparator:
+        quantity['comparator'] = comparator
+    if unit:
+        quantity['unit'] = unit
+    if system:
+        quantity['system'] = system
+    if code:
+        quantity['code'] = code
+    return quantity
+
+def to_simple_quantity(x):
+    value, unit, system, code = x
+    return to_quantity((value, None, unit, system, code))
+
+def to_range(x):
+    low, high = x
+    range = {}
+    if low:
+        range['low'] = to_simple_quantity(low)
+    if high:
+        range['high'] = to_simple_quantity(high)
+    return range
+
 def tuple_to_code(x):
     if len(x) == 2:
         display = None
@@ -40,6 +77,49 @@ def tuple_to_code(x):
 
 def has(rec, field):
     return field in rec.flds and rec[field]
+
+def to_dosage(rec):
+    dosage = {}
+    doseAndRate = {}
+    if has(rec, 'sequence'):
+        dosage['sequence'] = rec['sequence']
+    if has(rec, 'dosage_text'):
+        dosage['text'] = rec['dosage_text']
+    if has(rec, 'additionalInstruction'):
+        dosage['additionalInstruction'] = to_codeable_concept(rec['additionalInstruction'])
+    if has(rec, 'patientInstruction'):
+        dosage['patientInstruction'] = rec['patientInstruction']
+    if has(rec, 'asNeededBoolean'):
+        dosage['asNeededBoolean'] = rec['asNeededBoolean']
+    if has(rec, 'asNeeded'):
+        dosage['asNeededCodeableConcept'] = to_codeable_concept(rec['asNeeded'])
+    if has(rec, 'site'):
+        dosage['site'] = to_codeable_concept(rec['site'])
+    if has(rec, 'route'):
+        dosage['route'] = to_codeable_concept(rec['route'])
+    if has(rec, 'method'):
+        dosage['method'] = to_codeable_concept(rec['method'])
+    if has(rec, 'type'):
+        doseAndRate['type'] = to_codeable_concept(rec['type'])
+    if has(rec, 'doseRange'):
+        doseAndRate['doseRange'] = to_ratio(rec['doseRange'])
+    if has(rec, 'doseQuantity'):
+        doseAndRate['doseQuantity'] = to_simple_quantity(rec['doseQuantity'])
+    if has(rec, 'rateRatio'):
+        doseAndRate['rateRatio'] = to_ratio(rec['rateRatio'])
+    if has(rec, 'rateRange'):
+        doseAndRate['rateRange'] = to_range(rec['rateRange'])
+    if has(rec, 'rateQuantity'):
+        doseAndRate['rateQuantity'] = to_simple_quantity(rec['rateQuantity'])
+    if doseAndRate:
+        dosage['doseAndRate'] = [doseAndRate]
+    if has(rec, 'maxDosePerPeriod'):
+        dosage['maxDosePerPeriod'] = to_ratio(rec['maxDosePerPeriod'])
+    if has(rec, 'maxDosePerAdministration'):
+        dosage['maxDosePerAdministration'] = to_simple_quantity(rec['maxDosePerAdministration'])
+    if has(rec, 'maxDosePerLifetime'):
+        dosage['maxDosePerLifetime'] = to_simple_quantity(rec['maxDosePerLifetime'])
+
 
 def to_patient(rec):
     result = {}
@@ -209,7 +289,6 @@ def to_med_statement(rec):
             }
         ]
     return json.dumps(result)
-
 
 def to_med_administration(rec):
     result = {}
