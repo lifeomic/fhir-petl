@@ -165,6 +165,8 @@ def choose_value_by_key(value1, value2, override_with_value1):
             return value1
         elif value2:
             return value2
+        else:
+            return ''
 
 def determine_override_key(dict1_in, dict2_in, file_join_key_in, priority_key_criteria_in):
     '''given the info about the barcode, then assign the boolean to which value to override'''
