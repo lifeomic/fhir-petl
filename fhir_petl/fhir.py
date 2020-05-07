@@ -7,6 +7,15 @@ def to_json(table, resourceType, source):
     etl.io.text.totext(table, source, 'utf8', template='{data}\n')
     return table
 
+def to_timing(x):
+    timing = {}
+    event, code = x
+    if event:
+        timing['event'] = event
+    if code:
+        timing['code'] = to_codeable_concept(code)
+    return timing
+
 def to_codeable_concept(x):
     if isinstance(x, list):
         result = map(tuple_to_code, x)
@@ -89,6 +98,8 @@ def to_dosage(rec):
         dosage['additionalInstruction'] = to_codeable_concept(rec['additionalInstruction'])
     if has(rec, 'patientInstruction'):
         dosage['patientInstruction'] = rec['patientInstruction']
+    if has(rec, 'timing'):
+        dosage['timing'] = to_timing(rec['timing'])
     if has(rec, 'asNeededBoolean'):
         dosage['asNeededBoolean'] = rec['asNeededBoolean']
     if has(rec, 'asNeeded'):
@@ -119,6 +130,7 @@ def to_dosage(rec):
         dosage['maxDosePerAdministration'] = to_simple_quantity(rec['maxDosePerAdministration'])
     if has(rec, 'maxDosePerLifetime'):
         dosage['maxDosePerLifetime'] = to_simple_quantity(rec['maxDosePerLifetime'])
+    return dosage
 
 
 def to_patient(rec):
@@ -311,12 +323,12 @@ def to_med_administration(rec):
                 'text' : rec['note']
             }
         ]
-    if has(rec, 'route'):
-        result['dosage'] = [
-            {
-                'route': to_codeable_concept(rec['route'])
-            }
-        ]
+    dosage = to_dosage(rec)
+    if 'doseAndRate' in dosage:
+        dosage.update(dosage.pop('doseAndRate')[0])
+    if 'doseQuantity' in dosage:
+        dosage['dose'] = dosage.pop('doseQuantity')
+    result['dosage'] = dosage
     return json.dumps(result)
 
 
