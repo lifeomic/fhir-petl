@@ -9,12 +9,63 @@ def to_json(table, resourceType, source):
     return table
 
 
+def to_timing(x):
+    timing = {}
+    event, code = x
+    if event:
+        timing["event"] = event
+    if code:
+        timing["code"] = to_codeable_concept(code)
+    return timing
+
+
 def to_codeable_concept(x):
     if isinstance(x, list):
         result = map(tuple_to_code, x)
     else:
         result = [tuple_to_code(x)]
     return {"coding": [c for c in result if c.get("code")]}
+
+
+def to_ratio(x):
+    numerator, denominator = x
+    ratio = {}
+    if numerator:
+        ratio["numerator"] = to_quantity(numerator)
+    if denominator:
+        ratio["denominator"] = to_quantity(denominator)
+    return ratio
+
+
+def to_quantity(x):
+    value, comparator, unit, system, code = x
+    quantity = {}
+    if value:
+        quantity["value"] = value
+    if comparator:
+        quantity["comparator"] = comparator
+    if unit:
+        quantity["unit"] = unit
+    if system:
+        quantity["system"] = system
+    if code:
+        quantity["code"] = code
+    return quantity
+
+
+def to_simple_quantity(x):
+    value, unit, system, code = x
+    return to_quantity((value, None, unit, system, code))
+
+
+def to_range(x):
+    low, high = x
+    range = {}
+    if low:
+        range["low"] = to_simple_quantity(low)
+    if high:
+        range["high"] = to_simple_quantity(high)
+    return range
 
 
 def tuple_to_code(x):
@@ -44,6 +95,56 @@ def tuple_to_code(x):
 
 def has(rec, field):
     return field in rec.flds and rec[field]
+
+
+def to_dosage(rec):
+    dosage = {}
+    doseAndRate = {}
+    if has(rec, "sequence"):
+        dosage["sequence"] = rec["sequence"]
+    if has(rec, "dosage_text"):
+        dosage["text"] = rec["dosage_text"]
+    if has(rec, "additionalInstruction"):
+        dosage["additionalInstruction"] = to_codeable_concept(
+            rec["additionalInstruction"]
+        )
+    if has(rec, "patientInstruction"):
+        dosage["patientInstruction"] = rec["patientInstruction"]
+    if has(rec, "timing"):
+        dosage["timing"] = to_timing(rec["timing"])
+    if has(rec, "asNeededBoolean"):
+        dosage["asNeededBoolean"] = rec["asNeededBoolean"]
+    if has(rec, "asNeeded"):
+        dosage["asNeededCodeableConcept"] = to_codeable_concept(rec["asNeeded"])
+    if has(rec, "site"):
+        dosage["site"] = to_codeable_concept(rec["site"])
+    if has(rec, "route"):
+        dosage["route"] = to_codeable_concept(rec["route"])
+    if has(rec, "method"):
+        dosage["method"] = to_codeable_concept(rec["method"])
+    if has(rec, "type"):
+        doseAndRate["type"] = to_codeable_concept(rec["type"])
+    if has(rec, "doseRange"):
+        doseAndRate["doseRange"] = to_ratio(rec["doseRange"])
+    if has(rec, "doseQuantity"):
+        doseAndRate["doseQuantity"] = to_simple_quantity(rec["doseQuantity"])
+    if has(rec, "rateRatio"):
+        doseAndRate["rateRatio"] = to_ratio(rec["rateRatio"])
+    if has(rec, "rateRange"):
+        doseAndRate["rateRange"] = to_range(rec["rateRange"])
+    if has(rec, "rateQuantity"):
+        doseAndRate["rateQuantity"] = to_simple_quantity(rec["rateQuantity"])
+    if doseAndRate:
+        dosage["doseAndRate"] = [doseAndRate]
+    if has(rec, "maxDosePerPeriod"):
+        dosage["maxDosePerPeriod"] = to_ratio(rec["maxDosePerPeriod"])
+    if has(rec, "maxDosePerAdministration"):
+        dosage["maxDosePerAdministration"] = to_simple_quantity(
+            rec["maxDosePerAdministration"]
+        )
+    if has(rec, "maxDosePerLifetime"):
+        dosage["maxDosePerLifetime"] = to_simple_quantity(rec["maxDosePerLifetime"])
+    return dosage
 
 
 def to_patient(rec):
@@ -219,7 +320,36 @@ def to_med_statement(rec):
         result["reasonCode"] = [to_codeable_concept(rec["indication"])]
     if has(rec, "route"):
         result["dosage"] = [{"route": to_codeable_concept(rec["route"])}]
+    if has(rec, "indication"):
+        result["reasonCode"] = [to_codeable_concept(rec["indication"])]
+    if has(rec, "route"):
+        result["dosage"] = [{"route": to_codeable_concept(rec["route"])}]
+    return json.dumps(result)
 
+
+def to_med_administration(rec):
+    result = {}
+    result["id"] = rec["id"]
+    result["resourceType"] = "MedicationAdministration"
+    if has(rec, "status"):
+        result["status"] = rec["status"]
+    if has(rec, "subject"):
+        result["subject"] = {"reference": "Patient/" + rec["subject"]}
+    if has(rec, "medication"):
+        result["medicationCodeableConcept"] = to_codeable_concept(rec["medication"])
+    if has(rec, "start_date"):
+        result["effectivePeriod"] = {}
+        result["effectivePeriod"].update({"start": rec["start_date"].isoformat()})
+    if has(rec, "end_date"):
+        result["effectivePeriod"].update({"end": rec["end_date"].isoformat()})
+    if has(rec, "note"):
+        result["note"] = [{"text": rec["note"]}]
+    dosage = to_dosage(rec)
+    if "doseAndRate" in dosage:
+        dosage.update(dosage.pop("doseAndRate")[0])
+    if "doseQuantity" in dosage:
+        dosage["dose"] = dosage.pop("doseQuantity")
+    result["dosage"] = dosage
     return json.dumps(result)
 
 
@@ -231,4 +361,5 @@ types = {
     "MedicationDispense": to_med_dispense,
     "MedicationRequest": to_med_request,
     "MedicationStatement": to_med_statement,
+    "MedicationAdministration": to_med_administration,
 }
