@@ -8,7 +8,6 @@ def to_json(table, resourceType, source):
     etl.io.text.totext(table, source, "utf8", template="{data}\n")
     return table
 
-
 def to_timing(x):
     timing = {}
     event, code = x
@@ -67,6 +66,43 @@ def to_range(x):
         range["high"] = to_simple_quantity(high)
     return range
 
+
+def to_ratio(x):
+    numerator, denominator = x
+    ratio = {}
+    if numerator:
+        ratio['numerator'] = to_quantity(numerator)
+    if denominator:
+        ratio['denominator'] = to_quantity(denominator)
+    return ratio
+
+def to_quantity(x):
+    value, comparator, unit, system, code = x
+    quantity = {}
+    if value:
+        quantity['value'] = value
+    if comparator:
+        quantity['comparator'] = comparator
+    if unit:
+        quantity['unit'] = unit
+    if system:
+        quantity['system'] = system
+    if code:
+        quantity['code'] = code
+    return quantity
+
+def to_simple_quantity(x):
+    value, unit, system, code = x
+    return to_quantity((value, None, unit, system, code))
+
+def to_range(x):
+    low, high = x
+    range = {}
+    if low:
+        range['low'] = to_simple_quantity(low)
+    if high:
+        range['high'] = to_simple_quantity(high)
+    return range
 
 def tuple_to_code(x):
     if len(x) == 2:
