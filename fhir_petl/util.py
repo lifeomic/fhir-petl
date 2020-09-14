@@ -18,10 +18,11 @@ def dateparser(input_format, output_format):
 
     return parse
 
+
 class FormattedDateTime:
     def __init__(self, dt, output_format):
         if not isinstance(output_format, ISOFormat):
-            raise TypeError('argument 2 must be an ISOFormat')
+            raise TypeError("argument 2 must be an ISOFormat")
 
         self.dt = dt
         self.format = output_format
@@ -38,25 +39,28 @@ class FormattedDateTime:
     def isoformat(self):
         return self.dt.strftime(self.format.value)
 
+
 class ISOFormat(Enum):
-    YEAR = '%Y'
-    MONTH = '%Y-%m'
-    DAY = '%Y-%m-%d'
-    MINUTE = '%Y-%m-%dT%H:%M'
-    SECOND = '%Y-%m-%dT%H:%M:%S'
+    YEAR = "%Y"
+    MONTH = "%Y-%m"
+    DAY = "%Y-%m-%d"
+    MINUTE = "%Y-%m-%dT%H:%M"
+    SECOND = "%Y-%m-%dT%H:%M:%S"
+
 
 # parse a year string
-year = dateparser('%Y', ISOFormat.YEAR)
+year = dateparser("%Y", ISOFormat.YEAR)
 
 # join one are more inputs into a string
 # separated by space. falsy arguments are
 # ignored
 def join(*args):
-    result = ''
+    result = ""
     for arg in args:
         if arg:
-            result += ' %s'%arg
+            result += " %s" % arg
     return result.strip()
+
 
 number = etl.numparser()
 
@@ -65,16 +69,18 @@ def mkdirp(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+
 # resolve a relative path into an absolute
 # path using the command line args
 def resolve(path):
-    root = sys.argv[1] if len(sys.argv) > 1 else '.'
-    return '{0}/{1}'.format(root, path)
+    root = sys.argv[1] if len(sys.argv) > 1 else "."
+    return "{0}/{1}".format(root, path)
+
 
 # preprocess a table to get it ready for ETL
 def preprocess(table, sort=None, ids=None, convert=int):
     if not ids:
-        ids = ['ID']
+        ids = ["ID"]
 
     for id in ids:
         table = table.addfield(id, lambda rec: uuid4())
