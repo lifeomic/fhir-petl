@@ -115,7 +115,10 @@ def double_parse_multi_value(code_value_list, code_value_delimiter):
 
 
 def transform_transpose_row_info(
-    row_in, target_mappings_in, transpose_mappings_in, header_meta_dict_in=dict(),
+    row_in,
+    target_mappings_in,
+    transpose_mappings_in,
+    header_meta_dict_in=dict(),
 ):
     options_for_none = ["None", "NA", "N/A", "?", "#VALUE!", "-9", ""]
     mapped_row_list = []
@@ -174,7 +177,9 @@ def transform_multi_row_info(
         )
     else:
         for value_mapping_option, value_type_mapping_option, date_mapping_option in zip(
-            value_mappings_in, value_type_mappings_in, date_mappings_in,
+            value_mappings_in,
+            value_type_mappings_in,
+            date_mappings_in,
         ):
 
             if (
