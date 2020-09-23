@@ -63,7 +63,6 @@ def generate_row_info(in_files, join_key):
                 headers_to_keep = in_files[file_name]["multiple_columns_to_keep"]
 
             row_indices = get_row_indices(headers, headers_to_keep)
-
             for row in reader:
                 join_key_col_index = headers.index(join_key)
                 current_row_info = get_current_row(row_info, row[join_key_col_index])
@@ -119,7 +118,6 @@ def transform_transpose_row_info(
 ):
     options_for_none = ["None", "NA", "N/A", "?", "#VALUE!", "-9", ""]
     mapped_row_list = []
-    print("transpose_mappings_in: ", transpose_mappings_in)
     for transpose_mapping_dict in transpose_mappings_in:
         transpose_mapping_name = transpose_mapping_dict["mapping_name"]
         if (
@@ -147,11 +145,8 @@ def transform_transpose_row_info(
                         and len(value) > 0
                     ):
                         single_row_dict[target_mapping] = value[-1]
-                    # else:
-                    # print(target_mapping)
-                    # single_row_dict[target_mapping] = transpose_mapping_name
+
                     mapped_row_list.append(single_row_dict)
-    # print(mapped_row_list)
     return mapped_row_list
 
 
@@ -176,11 +171,11 @@ def transform_multi_row_info(
         for value_mapping_option, value_type_mapping_option, date_mapping_option in zip(
             value_mappings_in, value_type_mappings_in, date_mappings_in,
         ):
-
             if (
                 value_mapping_option in row_in
                 and row_in[value_mapping_option].strip() not in options_for_none
             ):
+
                 single_row_dict = transform_single_row_info(row_in, target_mappings_in)
                 single_row_dict["VALUE"] = row_in[value_mapping_option].strip()
                 single_row_dict["VALUE_CODE"] = value_mapping_option
@@ -200,11 +195,12 @@ def transform_multi_row_info(
                     single_row_dict["VALUE_DATE"] = row_in[date_mapping_option]
                 mapped_row_list.append(single_row_dict)
 
-    # returns single list with multiple dictionaries of SID, VALUE, and OBSERVATION_DATE key-value pairs
-    # return [
-    #     {"SID": "2956", "VALUE": "21", "OBSERVATION_DATE": "2008"},
-    #     {"SID": "2956", "VALUE": "24", "OBSERVATION_DATE": "2008"},
-    # ]
+        # sys.exit()
+        # returns single list with multiple dictionaries of SID, VALUE, and OBSERVATION_DATE key-value pairs
+        # return [
+        #     {"SID": "2956", "VALUE": "21", "OBSERVATION_DATE": "2008"},
+        #     {"SID": "2956", "VALUE": "24", "OBSERVATION_DATE": "2008"},
+        # ]
     return mapped_row_list
 
 
@@ -422,6 +418,7 @@ def generate_csv(
     mapping_join_key,
     output_file_name,
     priority_key_criteria_in="",
+    merge_duplicate_record_bool=True,
 ):
     """generate csv using helper functions by mapping info to new mapped json object mappings"""
     # row_info is a dictionary of dictionaries with SID as key and value as dictionary of column headers as keys and cell values as values
@@ -429,17 +426,19 @@ def generate_csv(
     row_info, header_meta_desc_dict = generate_row_info(
         in_files.get("files"), file_join_key_in
     )
+    if merge_duplicate_record_bool:
 
-    clean_master_row_info = clean_duplicates_from_row_info(
-        row_info, file_join_key_in, priority_key_criteria_in
-    )
+        row_info = clean_duplicates_from_row_info(
+            row_info, file_join_key_in, priority_key_criteria_in
+        )
+
     # one is returning a list (existing), the other should also return a list
     # before, every time we get a new row, transform the row from that
     transformed_row_info = []
     if in_files["multi_resource_per_row_bool"]:
 
         transformed_row_info = transform_single_row_to_multi_row(
-            clean_master_row_info,
+            row_info,
             target_mappings=in_files.get("target_mappings"),
             value_mappings=in_files.get("value_mappings"),
             value_type_mappings=in_files.get("value_type_mappings"),
@@ -472,9 +471,8 @@ def join_data(data1, join_key1, data2, join_key2, final_column_list=[]):
         data1 = pd.DataFrame(data1)
     if not isinstance(data2, pd.DataFrame):
         data2 = pd.DataFrame(data2)
-    print("data1: ", data1.head())
-    print("data2: ", data2.head())
     merged_df = data1.merge(data2, left_on=join_key1, right_on=join_key2)
+    merged_df.drop_duplicates(inplace=True)
     final_df = merged_df[final_column_list].copy()
     return final_df.to_dict("records")
 
@@ -508,13 +506,14 @@ def join_data(data1, join_key1, data2, join_key2, final_column_list=[]):
 
 # generate_csv(dm.observation_mapping_test, "barcode", "SID", "Observation_test.csv", priority_key_criteria_in="K")
 
-generate_csv(
-    dm.observation_bmi_gs_mapping_ktb,
-    "barcode",
-    "SID",
-    "Observation_bmi_gs.csv",
-    priority_key_criteria_in="K",
-)
+# generate_csv(
+#     dm.observation_age_at_donation_ktb,
+#     "barcode",
+#     "SID",
+#     "Observation_age_at_donation.csv",
+#     priority_key_criteria_in="K",
+#     merge_duplicate_record_bool=False,
+# )
 
 # generate_csv(
 #     dm.observation_mapping_ktb,
