@@ -18,7 +18,7 @@ more-itertools==4.3.0
 packaging==17.1
 pathlib2==2.3.2
 pbr==4.2.0
-petl==1.1.1
+petl==1.6.8
 pip-tools==2.0.2
 pluggy==0.7.1
 py==1.6.0
