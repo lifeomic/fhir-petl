@@ -63,11 +63,19 @@ def map_ynunk(ynunk_value):
 def map_marital_status(marital_status):
     return {
         "Married": ("http://hl7.org/fhir/v3/MaritalStatus", "M", "Married"),
-        "Single": ("http://hl7.org/fhir/v3/Race", "U", "unmarried",),
+        "Single": (
+            "http://hl7.org/fhir/v3/Race",
+            "U",
+            "unmarried",
+        ),
         "Divorced": ("http://hl7.org/fhir/v3/MaritalStatus", "D", "Divorced"),
         "Widowed": ("http://hl7.org/fhir/v3/MaritalStatus", "W", "Widowed"),
         "-1": ("http://hl7.org/fhir/v3/NullFlavor", "UNK", "unknown"),
-        "None": ("http://hl7.org/fhir/v3/NullFlavor", "UNK", "unknown",),
+        "None": (
+            "http://hl7.org/fhir/v3/NullFlavor",
+            "UNK",
+            "unknown",
+        ),
     }.get(marital_status, None)
 
 

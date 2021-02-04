@@ -5,7 +5,10 @@ observation_bmi_gs_mapping_ktb = {
         "bmi_and_gail.csv": {
             "skip_first_line": True,
             "first_line_metadata": False,
-            "multiple_columns_to_keep": [["barcode", "bmi"], ["barcode", "gail"],],
+            "multiple_columns_to_keep": [
+                ["barcode", "bmi"],
+                ["barcode", "gail"],
+            ],
         },
         "birth_year_don_year.csv": {
             "skip_first_line": False,
@@ -18,10 +21,21 @@ observation_bmi_gs_mapping_ktb = {
             "multiple_columns_to_keep": [["barcode", "subject_id"]],
         },
     },
-    "target_mappings": {"SID": ["subject_id", "barcode"],},
-    "value_mappings": ["bmi", "gail",],
-    "value_type_mappings": ["kg/m2", "%",],
-    "date_mappings": ["donation year", "donation year",],
+    "target_mappings": {
+        "SID": ["subject_id", "barcode"],
+    },
+    "value_mappings": [
+        "bmi",
+        "gail",
+    ],
+    "value_type_mappings": [
+        "kg/m2",
+        "%",
+    ],
+    "date_mappings": [
+        "donation year",
+        "donation year",
+    ],
     "column_headers": [
         "SID",
         "VALUE",
@@ -848,7 +862,10 @@ condition_mapping_ktb = {
         "CONDITION_NAME": ["cancer", "disease"],
         "START_DATE": ["donation year"],
     },
-    "value_mappings": ["cancer", "disease",],
+    "value_mappings": [
+        "cancer",
+        "disease",
+    ],
     "date_mappings": [
         "donation year",
         "donation year",
