@@ -21,7 +21,7 @@ pbr==4.2.0
 petl==1.6.8
 pip-tools==2.0.2
 pluggy==0.7.1
-py==1.6.0
+py==1.10.0
 pylint==2.0.1
 pyparsing==2.2.0
 pytest==3.8.0
